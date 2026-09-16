@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>/* gate-bootstrap: capture an early login submit before the remote gate wires up, so the first click is never lost */
+  (function(){function h(e){var f=e.target;if(f&&f.id==='gate-form'&&!window.MembershipGate){e.preventDefault();e.stopImmediatePropagation();window.__gateEarlySubmit=true;}}window.addEventListener('submit',h,true);window.__gateBootstrapDisarm=function(){window.removeEventListener('submit',h,true);};})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Link na Bio IA — Maestros da IA</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://gate.maestrosdaia.com">
+  <link rel="preload" href="https://gate.maestrosdaia.com/v1/membership-gate.js" as="script">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d0b12'/%3E%3Crect x='6' y='9' width='20' height='14' rx='3' fill='none' stroke='%23ff4d5e' stroke-width='2'/%3E%3Ccircle cx='9.5' cy='7' r='1.3' fill='%23ffcf6b'/%3E%3Ccircle cx='16' cy='7' r='1.3' fill='%23ffcf6b'/%3E%3Ccircle cx='22.5' cy='7' r='1.3' fill='%23ffcf6b'/%3E%3Ccircle cx='9.5' cy='25' r='1.3' fill='%23ffcf6b'/%3E%3Ccircle cx='16' cy='25' r='1.3' fill='%23ffcf6b'/%3E%3Ccircle cx='22.5' cy='25' r='1.3' fill='%23ffcf6b'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="bg-gradient"></div>
+
+  <!-- ===================== MEMBERSHIP GATE ===================== -->
+  <div id="gate-screen" class="screen active">
+    <div class="gate-container">
+      <div class="bulbs"></div>
+      <div class="gate-inner">
+        <div class="gate-header">
+          <span class="marquee-badge" aria-hidden="true">
+            <svg viewBox="0 0 40 40" fill="none">
+              <rect x="6" y="12" width="28" height="18" rx="3" stroke="#ff4d5e" stroke-width="2.2"/>
+              <path d="M11 30l-2 5h22l-2-5" stroke="#e7b24e" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="10" cy="8.5" r="1.7" fill="#ffcf6b"/><circle cx="20" cy="8.5" r="1.7" fill="#ffcf6b"/><circle cx="30" cy="8.5" r="1.7" fill="#ffcf6b"/>
+              <rect x="12" y="17" width="16" height="2.4" rx="1.2" fill="#ffcf6b"/>
+              <rect x="14" y="22" width="12" height="2.4" rx="1.2" fill="#ffcf6b" opacity=".65"/>
+            </svg>
+          </span>
+          <h1 class="gradient-text">Link na Bio IA</h1>
+          <p class="subtitle">Monte sua página de links — pronta pra publicar e colocar no seu link da bio.</p>
+          <p class="community-badge">Exclusivo para membros da Comunidade Maestros da IA</p>
+        </div>
+
+        <form id="gate-form" class="gate-form">
+          <div class="form-group">
+            <label for="gate-email">Seu e-mail cadastrado</label>
+            <input type="email" id="gate-email" placeholder="seu@email.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="gate-phone">Seu WhatsApp (com DDD)</label>
+            <input type="tel" id="gate-phone" placeholder="11999999999" autocomplete="tel">
+          </div>
+          <button type="submit" id="gate-submit" class="btn-primary">
+            <span class="btn-text">Entrar no letreiro</span>
+            <span class="btn-loading" style="display:none;">Verificando...</span>
+          </button>
+          <p id="gate-error" class="error-message" style="display:none;"></p>
+        </form>
+
+        <p class="gate-footer">Ainda não é membro? <a href="https://comunidade.maestrosdaia.com" target="_blank" rel="noopener noreferrer">Conheça a Comunidade Maestros da IA</a></p>
+      </div>
+      <div class="bulbs dim"></div>
+    </div>
+  </div>
+
+  <!-- ===================== API KEY SETUP ===================== -->
+  <div id="key-screen" class="screen">
+    <div class="key-container">
+      <h2>Chave de IA (opcional)</h2>
+      <p class="subtitle">O construtor funciona 100% sem chave. A chave é só para o recurso <strong>"Escrever com IA"</strong> — título, bio e rótulos dos links. Suas chaves ficam salvas apenas no seu navegador; nunca são enviadas para nossos servidores.</p>
+
+      <div id="key-inputs" class="key-inputs">
+        <!-- Dynamically populated by api-key-manager.js -->
+      </div>
+
+      <div class="key-model-row">
+        <label for="key-model-select">Modelo de IA (para "Escrever com IA")</label>
+        <select id="key-model-select" class="picker"></select>
+      </div>
+
+      <div class="key-actions">
+        <button id="key-continue" class="btn-primary" disabled>Continuar com IA</button>
+        <button id="key-skip" class="btn-secondary">Pular — usar sem IA</button>
+      </div>
+
+      <details class="key-info">
+        <summary>Como consigo uma chave de API?</summary>
+        <div class="key-info-content">
+          <p><strong>OpenRouter</strong> (recomendado — uma chave alcança Claude, GPT, Gemini, DeepSeek e mais): <code>openrouter.ai/keys</code></p>
+          <p><strong>OpenAI:</strong> <code>platform.openai.com/api-keys</code></p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN APP ===================== -->
+  <div id="app-screen" class="screen">
+    <header class="app-header">
+      <div class="header-left">
+        <span class="header-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" fill="none">
+            <rect x="7" y="13" width="26" height="16" rx="3" stroke="#ff4d5e" stroke-width="2.2"/>
+            <circle cx="11" cy="9" r="1.6" fill="#ffcf6b"/><circle cx="20" cy="9" r="1.6" fill="#ffcf6b"/><circle cx="29" cy="9" r="1.6" fill="#ffcf6b"/>
+            <rect x="12" y="18" width="16" height="2.3" rx="1.15" fill="#ffcf6b"/>
+          </svg>
+        </span>
+        <h1 class="app-title">Link na Bio IA</h1>
+      </div>
+      <div class="header-right">
+        <a href="about.html" class="btn-icon" title="Sobre esta ferramenta" aria-label="Sobre">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </a>
+        <button id="manage-keys-btn" class="btn-icon" title="Gerenciar chaves de API" aria-label="Chaves">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        </button>
+        <button id="logout-btn" class="btn-icon" title="Sair" aria-label="Sair">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div class="studio">
+
+        <!-- ===== BRIEF RAIL ===== -->
+        <div class="panel" id="brief-panel">
+          <div class="panel-head">
+            <h2>Sua página de links</h2>
+            <span class="eyebrow">no ar &middot; ao vivo</span>
+          </div>
+          <div class="panel-body">
+
+            <!-- AI compose -->
+            <div class="ai-box">
+              <p class="ai-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.4L12 15l-1.9-4.6L5.5 9l4.6-1.4z"/><path d="M5 16l.8 2 .8-2 .8 2"/></svg>
+                Escrever com IA
+              </p>
+              <p class="ai-sub">Descreva seu negócio em uma frase e a IA escreve seu título, bio e sugere os links.</p>
+              <textarea id="ai-brief" class="textarea" placeholder="Ex.: Sou confeiteira em BH, faço bolos personalizados e vendo pelo WhatsApp e Instagram."></textarea>
+              <div class="ai-actions">
+                <button id="ai-generate" class="btn-primary">Escrever com IA</button>
+                <span id="ai-note" class="ai-note"></span>
+              </div>
+            </div>
+
+            <!-- 1. Perfil -->
+            <span class="section-label"><span class="num">01</span>Perfil</span>
+            <div class="field">
+              <label for="p-name">Nome de exibição</label>
+              <input type="text" id="p-name" class="input" maxlength="40" placeholder="Ex.: Doces da Ana">
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label for="p-handle">@ (opcional)</label>
+                <input type="text" id="p-handle" class="input" maxlength="30" placeholder="docesdaana">
+              </div>
+              <div class="field">
+                <label for="p-avatar">Avatar</label>
+                <input type="text" id="p-avatar" class="input" maxlength="200" placeholder="Emoji, iniciais ou URL de imagem">
+                <span class="hint">Deixe vazio p/ usar as iniciais.</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="p-bio">Bio</label>
+              <textarea id="p-bio" class="textarea" maxlength="160" placeholder="Uma linha que diz quem você é e o que oferece."></textarea>
+              <span class="char" id="p-bio-char">0/160</span>
+            </div>
+
+            <hr class="divider">
+
+            <!-- 2. Aparência -->
+            <span class="section-label"><span class="num">02</span>Aparência</span>
+            <div class="theme-grid" id="theme-grid"><!-- themes injected --></div>
+            <div class="accent-row">
+              <span class="section-label" style="margin:0;">Cor da marca</span>
+              <div class="accent-swatches" id="accent-swatches"><!-- accent dots injected --></div>
+              <label class="accent-custom">
+                <input type="color" id="accent-custom" value="#ff4d5e"> personalizar
+              </label>
+            </div>
+
+            <hr class="divider">
+
+            <!-- 3. Links -->
+            <span class="section-label"><span class="num">03</span>Links</span>
+            <div class="links-list" id="links-list"><!-- link cards injected --></div>
+            <button class="add-link-btn" id="add-link">+ Adicionar link</button>
+
+          </div>
+        </div>
+
+        <!-- ===== PREVIEW STAGE ===== -->
+        <div class="stage">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Prévia ao vivo</h3>
+              <span class="eyebrow" id="preview-count">0 links</span>
+            </div>
+            <div class="stage-marquee">
+              <div class="bulbs"></div>
+            </div>
+            <div class="phone-wrap">
+              <div class="phone">
+                <iframe id="preview-frame" class="phone-screen" title="Prévia da página de links" sandbox="allow-same-origin allow-popups"></iframe>
+              </div>
+            </div>
+            <div class="export-bar">
+              <button id="export-download" class="btn-primary">Baixar HTML</button>
+              <button id="export-copy" class="btn-secondary">Copiar HTML</button>
+              <button id="export-open" class="btn-ghost">Abrir em nova aba</button>
+            </div>
+            <p class="export-note">Você recebe a <strong>página pronta</strong> (um arquivo <code>.html</code> autossuficiente). Publique de graça no <strong>Netlify Drop</strong>, GitHub Pages ou no seu site, e use esse endereço no seu link da bio. Nós não hospedamos a página por você.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <p>Feito com carinho para a comunidade <strong>Maestros da IA</strong></p>
+      <p class="footer-links">
+        <a href="about.html" target="_blank" rel="noopener noreferrer">Sobre</a>
+        <span class="footer-sep">·</span>
+        <a href="privacy-policy.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>
+        <span class="footer-sep">·</span>
+        <a href="data-deletion.html" target="_blank" rel="noopener noreferrer">Solicitar Exclusão de Dados</a>
+      </p>
+    </footer>
+  </div>
+
+  <!-- ===================== API KEY MODAL ===================== -->
+  <div id="key-modal" class="modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Gerenciar chaves de API</h3>
+        <button id="modal-close" class="btn-icon" aria-label="Fechar">&times;</button>
+      </div>
+      <div id="modal-key-inputs" class="key-inputs"></div>
+      <div class="modal-model-row">
+        <label for="model-select-modal">Modelo de IA</label>
+        <select id="model-select-modal" class="picker"></select>
+      </div>
+      <div class="modal-actions">
+        <button id="modal-save" class="btn-primary">Salvar</button>
+        <button id="modal-clear" class="btn-danger">Limpar todas as chaves</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="kill-switch.js"></script>
+  <script src="rate-limiter.js"></script>
+  <script src="https://gate.maestrosdaia.com/v1/membership-gate.js"></script>
+  <script src="api-key-manager.js"></script>
+  <script src="feedback-widget.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
